@@ -37,16 +37,21 @@ module HouseResults
 					a[:top] == b[:top] ? a[:left].to_i <=> b[:left].to_i : a[:top].to_i <=> b[:top].to_i
 				end
 				
-#				zip forward in the list until we get to the end of the header
-				i = 0
-				until( data_sorted[i].content.strip == 'Agent')
-					#check for the date
-					date = data_sorted[i].content.strip[DATE_REGEX]
-					if( date)
-						self.date = Date.parse(date)
-					end
-					i+= 1
+				#get the date
+				unless self.date
+					date_node = data_sorted.find{ |n|
+						n.content =~ DATE_REGEX
+					}
+					self.date = Date.parse(date_node.content[DATE_REGEX])
 				end
+				
+#				zip forward in the list until we get to the end of the header
+				i = date_sorted.index{ |n| n.content.strip == 'Agent'}
+				
+				end_i = date_sorted.index{ |n| n.content =~ /KEY: S indicates property sold*/i}
+				#until( data_sorted[i].content.strip == 'Agent')
+				#	i+= 1
+				#end
 #				
 #				move on to the next node which is the first property
 				i += 1
