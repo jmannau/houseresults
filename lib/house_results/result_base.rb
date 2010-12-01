@@ -18,7 +18,7 @@ module HouseResults
 		
 		def save_pdf( path = "./")
 			pdf = PDFKit.new(self.url)
-			pdf.to_file(path+self.to_s+".pdf")
+			pdf.to_file(path+clean_filename(self.to_s+".pdf"))
 		end
 		
 		def floorplan_url
@@ -27,11 +27,17 @@ module HouseResults
 		
 		def save_floorplan( path = "./")
 			_ext = File.extname(self.floorplan_url)
-			`curl --silent '#{self.floorplan_url}' -o '#{path+self.to_s+_ext}'`
+			fn = clean_filename("#{self.to_s+_ext}")
+			`curl --silent '#{self.floorplan_url}' -o '#{path+fn}'`
 		end
 		
 		def to_s
 			"#{self.suburb} #{self.address}"
+		end
+		
+		private
+		def clean_filename( filename)
+			filename.gsub(/[\x00\/\\:\*\?\"<>\|]/, '_')
 		end
 		
 	end

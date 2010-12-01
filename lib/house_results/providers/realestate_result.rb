@@ -14,7 +14,7 @@ module HouseResults
 		private
 		def get_re_floorplan_url
 			if( self.id)
-				doc = Nokogiri::HTML(open("http://www.realestate.com.au/floorplan.ds?id=#{self.re_id}"))
+				doc = Nokogiri::HTML(open("http://www.realestate.com.au/floorplan.ds?id=#{self.id}"))
 				node = doc.at_css("img[data-type=floorplan]")
 				node[:src] if node
 			end

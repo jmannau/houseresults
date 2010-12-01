@@ -24,7 +24,7 @@ module HouseResults
 			f = download_file(url)
 			
 			#TODO fix up the path bizo.... need configuration or something similar..
-			`../bin/pdftohtml -xml -c -i -noframes #{f}`
+			`pdftohtml -xml -c -i -noframes #{f}`
 			
 			doc = Nokogiri::XML(File.open("#{f}.xml"))
 			
@@ -46,9 +46,9 @@ module HouseResults
 				end
 				
 #				zip forward in the list until we get to the end of the header
-				i = date_sorted.index{ |n| n.content.strip == 'Agent'}
+				i = data_sorted.index{ |n| n.content.strip == 'Agent'}
 				
-				end_i = date_sorted.index{ |n| n.content =~ /KEY: S indicates property sold*/i}
+				end_i = data_sorted.index{ |n| n.content =~ /KEY: S indicates property sold*/i}
 				#until( data_sorted[i].content.strip == 'Agent')
 				#	i+= 1
 				#end
@@ -56,28 +56,38 @@ module HouseResults
 #				move on to the next node which is the first property
 				i += 1
 #				parse each property until we get to the footer
-				while true
-					r = parse_info(data_sorted[i..i+5])
-					i += 6
-					#check if the next line is the end of the page!
-					if( data_sorted[i].content.strip =~ /KEY*/i)
-						break
+				while i < end_i
+					#find the end of this current house record
+					j=i+1
+					row = data_sorted[i][:top]
+					#get all the items in the current row
+					while( data_sorted[j][:top] == row) 
+						j += 1
+					end
 					#if the next two nodes aren't at the as vertical position then 
 					# the next node belongs with the current property
-					elsif( data_sorted[i][:top] != data_sorted[i+1][:top])
-						r.agent += data_sorted[i].content.strip
-						i += 1
+					if( data_sorted[j][:top] != data_sorted[j+1][:top])
+						j += 1
 					end
+					#if we are at the last line on the page then ensure we aren't reading too many lines
+					if( j >= end_i)
+						j = end_i
+					end
+
+					#make the real estate agent field optional
+					r = parse_info(data_sorted[i..j-1])
+					i = j
 
 					self.houses << r
 					
 				end
 			end
 			#don't forget to clean up the temp files
-			File.delete(f)
-			File.delete("#{f}.xml")
+			File.delete(f) if File.exists?(f)
+			File.delete("#{f}.xml") if File.exists?("#{f}.xml")
 			return self
 		end
+		
 		
 		def parse_info(nodes)
 			
@@ -85,11 +95,13 @@ module HouseResults
 			r.suburb = nodes[COL_SUBURB].content.strip
 			r.id = parse_id(nodes[COL_ADDRESS])
 			r.address = nodes[COL_ADDRESS].content.strip
-			r.bedrooms = parse_bedrooms(nodes[COL_BEDROOMS])
+			r.bedrooms = parse_bedrooms(nodes[COL_BEDROOMS]).to_i
 			r.type = parse_type(nodes[COL_TYPE])
 			r.price = parse_price(nodes[COL_PRICE])
 			r.status = parse_status(nodes[COL_STATUS])
-			r.agent = nodes[COL_AGENT].content.strip
+			r.agent = nodes[COL_AGENT].content.strip if nodes[COL_AGENT]
+			#check if there is two agent info lines
+			r.agent += nodes[COL_AGENT+1].content.strip if nodes[COL_AGENT+1]
 			return r
 			
 		end

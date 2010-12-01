@@ -1,10 +1,12 @@
 module HouseResults
+	
+	require 'rubygems'
 
-	require 'house_results/provider_base'
-	require 'house_results/result_base'
-	require 'house_results/providers/realestate'
-	require 'house_results/providers/realestate_result'
-	require 'house_results/providers/domain'
-	require 'house_results/providers/domain_result'
+	require File.join(File.dirname(__FILE__), 'house_results/provider_base')
+	require File.join(File.dirname(__FILE__), 'house_results/result_base')
+	require File.join(File.dirname(__FILE__), 'house_results/providers/realestate')
+	require File.join(File.dirname(__FILE__), 'house_results/providers/realestate_result')
+	require File.join(File.dirname(__FILE__), 'house_results/providers/domain')
+	require File.join(File.dirname(__FILE__), 'house_results/providers/domain_result')
 
 end
